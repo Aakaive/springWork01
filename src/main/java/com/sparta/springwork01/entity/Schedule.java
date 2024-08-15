@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Getter
 @Setter
@@ -16,7 +17,7 @@ public class Schedule {
     private String contents;
     private String username;
     private String password;
-    private LocalDateTime date;
+    private Date date;
 
 
     public Schedule(ScheduleRequestDto scheduleRequestDto) {
