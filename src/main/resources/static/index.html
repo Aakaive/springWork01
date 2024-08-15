@@ -34,6 +34,10 @@
             width: 538px;
         }
 
+        .password {
+            display: none;
+        }
+
         .area-write img {
             cursor: pointer;
             position: absolute;
@@ -168,6 +172,27 @@
             font-family: 'Spoqa Han Sans';
         }
 
+        .contents textarea.te-edit2 {
+
+        }
+
+        .contents .textarea-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .textarea-group textarea {
+        }
+        .contents .edit {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .row-direction {
+            display: flex;
+            flex-direction: row;
+        }
         .footer {
             position: relative;
             height: 40px;
@@ -204,6 +229,26 @@
         #cards-box {
             margin-top: 12px;
         }
+
+        /* 모달 스타일 */
+        #passwordModal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        #passwordModal input {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
     </style>
     <script>
         // 사용자가 내용을 올바르게 입력하였는지 확인합니다.
@@ -236,10 +281,10 @@
         // 숨길 버튼을 숨기고, 나타낼 버튼을 나타냅니다.
         function editPost(id) {
             showEdits(id);
-            let username = $(`#${id}-username`).text().trim();
             let contents = $(`#${id}-contents`).text().trim();
-            $(`#${id}-textarea1`).val(username);
-            $(`#${id}-textarea2`).val(contents);
+            let username = $(`#${id}-username`).text().trim();
+            $(`#${id}-textarea1`).val(contents);
+            $(`#${id}-textarea2`).val(username);
         }
 
         function showEdits(id) {
@@ -288,11 +333,18 @@
                         ${date}
                     </div>
                     <div id="${id}-id" class="username">${id}</div>
-                    <div id="${id}-username" class="username">
-                        ${username}
+                    <div class="username row-direction">
+                        관리자명 :
+                        <div id="${id}-username" class="">
+                            ${username}
+                        </div>
                     </div>
-                    <div id="${id}-username" class="username">
-                        ${password}
+                    <div class="username row-direction">
+                        비밀번호 : (
+                        <div id="${id}-password" class="">
+                            ${password}
+                        </div>
+                        )
                     </div>
                 </div>
                 <!-- contents 조회/수정 영역-->
@@ -302,13 +354,18 @@
                     </div>
                     <div id="${id}-editarea" class="edit">
                         <textarea id="${id}-textarea1" class="te-edit" name="" id="" cols="30" rows="5"></textarea>
-                        <textarea id="${id}-textarea2" class="te-edit" name="" id="" cols="30" rows="5"></textarea>
+                        <div class="textarea-group">
+                            <label>담당자명 : </label><textarea id="${id}-textarea2" class="te-edit2"></textarea>
+                        </div>
+                        <div class="textarea-group">
+                            <label>비밀번호 : </label><textarea id="${id}-textarea3" class="te-edit2"></textarea>
+                        </div>
                     </div>
                 </div>
                 <!-- 버튼 영역-->
                 <div class="footer">
                     <img id="${id}-edit" class="icon-start-edit" src="images/edit.png" alt="" onclick="editPost('${id}')">
-                    <img id="${id}-delete" class="icon-delete" src="images/delete.png" alt="" onclick="deleteOne('${id}')">
+                    <img id="${id}-delete" class="icon-delete delete-button" data-id="${id}" src="images/delete.png" alt="">
                     <img id="${id}-submit" class="icon-end-edit" src="images/done.png" alt="" onclick="submitEdit('${id}')">
                 </div>
             </div>`;
@@ -320,6 +377,7 @@
         function writePost() {
             // 1. 작성한 메모를 불러옵니다.
             let contents = $('#contents').val();
+            let password = $('#password').val();
 
             // 2. 작성한 메모가 올바른지 isValidContents 함수를 통해 확인합니다.
             if (isValidContents(contents) == false) {
@@ -331,7 +389,7 @@
             // 4. 전달할 data JSON으로 만듭니다.
 
             let date = new Date().toISOString();
-            let data = {'contents': contents, 'username': username, 'password': "123456", 'date': date};
+            let data = {'contents': contents, 'username': username, 'password': password, 'date': date};
 
             // 5. POST /api/memos 에 data를 전달합니다.
             $.ajax({
@@ -349,13 +407,25 @@
         // 메모를 수정합니다.
         function submitEdit(id) {
             // 1. 작성 대상 메모의 username과 contents 를 확인합니다.
-            let contents = $(`#${id}-textarea2`).val().trim();
-            let username = $(`#${id}-textarea1`).val().trim();
+            let contents = $(`#${id}-textarea1`).val().trim();
+            let username = $(`#${id}-textarea2`).val().trim();
+            let password = $(`#${id}-textarea3`).val().trim();
+            let passwordStored = $(`#${id}-password`).text().trim();
 
             // 2. 작성한 메모가 올바른지 isValidContents 함수를 통해 확인합니다.
             if (isValidContents(contents) == false && isValidContents(username) == false) {
                 return;
             }
+
+            console.log(password);
+            console.log(passwordStored);
+
+            if(password != passwordStored){
+                alert('비밀번호가 틀렸습니다!');
+                return;
+            }
+
+
 
             // 3. 전달할 data JSON으로 만듭니다.
             let date = new Date().toISOString();
@@ -374,9 +444,48 @@
             });
         }
 
-        // 메모를 삭제합니다.
+        $(document).ready(function () {
+            // HTML 문서를 로드할 때마다 실행합니다.
+            // getMessages();
+
+            // Ensure that event listeners are added after the messages are loaded
+            $(document).on('click', '.delete-button', function () {
+                let id = $(this).data('id'); // Get the data-id value
+                promptPassword(id); // Call the function to prompt for password
+            });
+        });
+
+        function promptPassword(id) {
+            $('#passwordModal').show(); // Show the modal
+
+            // 확인 버튼 클릭 시
+            $('#confirmPassword').off('click').on('click', function () {
+                let inputPassword = $('#modal-password').val().trim();
+                let correctPassword = $(`#${id}-password`).text().trim(); // Get the stored password
+
+
+                console.log(`입력된 비밀번호: ${inputPassword}`);
+                console.log(`저장된 비밀번호: ${correctPassword}`);
+
+                if (inputPassword === correctPassword) {
+                    deleteOne(id);
+                } else {
+                    alert('비밀번호가 틀렸습니다!');
+                }
+
+                // Hide the modal and reset the input field
+                $('#passwordModal').hide();
+                $('#modal-password').val('');
+            });
+
+            // 취소 버튼 클릭 시
+            $('#cancelPassword').off('click').on('click', function () {
+                $('#passwordModal').hide();
+                $('#modal-password').val(''); // Reset the input field
+            });
+        }
+
         function deleteOne(id) {
-            // 1. DELETE /api/memos/{id} 에 요청해서 메모를 삭제합니다.
             $.ajax({
                 type: "DELETE",
                 url: `/api/schedules/${id}`,
@@ -384,7 +493,7 @@
                     alert('메시지 삭제에 성공하였습니다.');
                     window.location.reload();
                 }
-            })
+            });
         }
     </script>
 </head>
@@ -398,14 +507,17 @@
 </div>
 <div class="wrap">
     <div class="header">
-        <h2>Memo</h2>
+        <h2>Schedules</h2>
         <p>
-            공유하고 싶은 소식을 입력해주세요.
+            일정을 입력해주세요.
         </p>
     </div>
     <div class="area-write">
-        <textarea class="field" placeholder="공유하고 싶은 소식을 입력해주세요" name="contents" id="contents" cols="30"
-                  rows="10"></textarea>
+        <div>
+            <textarea class="field" placeholder="등록하고 싶은 일정을 입력해주세요." name="contents" id="contents" cols="30"
+                      rows="10"></textarea>
+            <textarea placeholder="비밀번호" id="password"></textarea>
+        </div>
         <!--            <button class="btn btn-danger" onclick="writePost()">작성하기</button>-->
         <img src="images/send.png" alt="" onclick="writePost()">
     </div>
@@ -427,10 +539,16 @@
             <!-- 버튼 영역-->
             <div class="footer">
                 <img id="1-edit" class="icon-start-edit" src="images/edit.png" alt="" onclick="editPost('1')">
-                <img id="1-delete" class="icon-delete" src="images/delete.png" alt="" onclick="deleteOne('1')">
+                <img id="1-delete" class="icon-delete delete-button" src="images/delete.png" data-id="123" alt="">
                 <img id="1-submit" class="icon-end-edit" src="images/done.png" alt="" onclick="submitEdit('1')">
             </div>
         </div>
+    </div>
+    <div id="passwordModal" style="display: none;">
+        <label for="modal-password">비밀번호를 입력하세요:</label>
+        <input type="password" id="modal-password">
+        <button id="confirmPassword">확인</button>
+        <button id="cancelPassword">취소</button>
     </div>
 </div>
 </body>
