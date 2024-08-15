@@ -236,8 +236,10 @@
         // 숨길 버튼을 숨기고, 나타낼 버튼을 나타냅니다.
         function editPost(id) {
             showEdits(id);
+            let username = $(`#${id}-username`).text().trim();
             let contents = $(`#${id}-contents`).text().trim();
-            $(`#${id}-textarea`).val(contents);
+            $(`#${id}-textarea1`).val(username);
+            $(`#${id}-textarea2`).val(contents);
         }
 
         function showEdits(id) {
@@ -285,10 +287,11 @@
                     <div class="date">
                         ${date}
                     </div>
+                    <div id="${id}-id" class="username">${id}</div>
                     <div id="${id}-username" class="username">
                         ${username}
                     </div>
-                    <div id="${password}-username" class="username">
+                    <div id="${id}-username" class="username">
                         ${password}
                     </div>
                 </div>
@@ -298,7 +301,8 @@
                         ${contents}
                     </div>
                     <div id="${id}-editarea" class="edit">
-                        <textarea id="${id}-textarea" class="te-edit" name="" id="" cols="30" rows="5"></textarea>
+                        <textarea id="${id}-textarea1" class="te-edit" name="" id="" cols="30" rows="5"></textarea>
+                        <textarea id="${id}-textarea2" class="te-edit" name="" id="" cols="30" rows="5"></textarea>
                     </div>
                 </div>
                 <!-- 버튼 영역-->
@@ -325,7 +329,9 @@
             let username = genRandomName(10);
 
             // 4. 전달할 data JSON으로 만듭니다.
-            let data = {'contents': contents,'username': username, 'password': "123456", 'date': Date.now()};
+
+            let date = new Date().toISOString();
+            let data = {'contents': contents, 'username': username, 'password': "123456", 'date': date};
 
             // 5. POST /api/memos 에 data를 전달합니다.
             $.ajax({
@@ -343,16 +349,17 @@
         // 메모를 수정합니다.
         function submitEdit(id) {
             // 1. 작성 대상 메모의 username과 contents 를 확인합니다.
-            let username = $(`#${id}-username`).text().trim();
-            let contents = $(`#${id}-textarea`).val().trim();
+            let contents = $(`#${id}-textarea2`).val().trim();
+            let username = $(`#${id}-textarea1`).val().trim();
 
             // 2. 작성한 메모가 올바른지 isValidContents 함수를 통해 확인합니다.
-            if (isValidContents(contents) == false) {
+            if (isValidContents(contents) == false && isValidContents(username) == false) {
                 return;
             }
 
             // 3. 전달할 data JSON으로 만듭니다.
-            let data = {'username': username, 'contents': contents};
+            let date = new Date().toISOString();
+            let data = {'contents': contents, 'username': username, 'date': date, "id": id};
 
             // 4. PUT /api/memos/{id} 에 data를 전달합니다.
             $.ajax({

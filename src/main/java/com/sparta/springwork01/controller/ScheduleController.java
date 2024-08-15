@@ -35,4 +35,15 @@ public class ScheduleController {
         return scheduleService.getAllSchedules();
     }
 
+    @PutMapping("/schedules/{id}")
+    public Long updateSchedule(@PathVariable("id") Long id, @RequestBody ScheduleRequestDto scheduleRequestDto) {
+        ScheduleService scheduleService = new ScheduleService(jdbcTemplate);
+        return scheduleService.updateSchedule(id, scheduleRequestDto);
+    }
+
+    @DeleteMapping("/schedules/{id}")
+    public Long deleteSchedule(@PathVariable("id") Long id) {
+        ScheduleService scheduleService = new ScheduleService(jdbcTemplate);
+        return scheduleService.deleteSchedule(id);
+    }
 }

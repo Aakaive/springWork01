@@ -11,6 +11,8 @@ import org.springframework.jdbc.support.KeyHolder;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
@@ -40,7 +42,7 @@ public class ScheduleService {
 
         ScheduleResponseDto scheduleResponseDto = new ScheduleResponseDto(schedule);
 
-        return null;
+        return scheduleResponseDto;
     }
 
     public List<ScheduleResponseDto> getAllSchedules() {
@@ -57,5 +59,52 @@ public class ScheduleService {
                 return new ScheduleResponseDto(id, contents, username, password, date);
             }
         });
+    }
+
+
+    public Long updateSchedule(Long id, ScheduleRequestDto scheduleRequestDto) {
+        try {
+            Schedule schedule = findById(id);
+            if(schedule != null){
+                String sql = "UPDATE schedule SET contents = ?, username = ?, date = ? WHERE id = ?";
+                Timestamp timestamp = new Timestamp(scheduleRequestDto.getDate().getTime());
+                jdbcTemplate.update(sql, scheduleRequestDto.getContents(), scheduleRequestDto.getUsername(), timestamp, id);
+                return id;
+            } else {
+                throw new IllegalArgumentException("Schedule not found");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error updating schedule: " + e.getMessage());
+        }
+    }
+
+    private Schedule findById(Long id) {
+        String sql = "SELECT * FROM schedule WHERE id = ?";
+
+        return jdbcTemplate.query(sql, resultSet -> {
+            if (resultSet.next()) {
+                Schedule schedule = new Schedule();
+                schedule.setUsername(resultSet.getString("username"));
+                schedule.setContents(resultSet.getString("contents"));
+                Date date = new Date();
+                schedule.setDate(date);
+                return schedule;
+            } else {
+                return null;
+            }
+        }, id);
+    }
+
+    public Long deleteSchedule(Long id) {
+        Schedule schedule = findById(id);
+        if(schedule != null) {
+            String sql = "DELETE FROM schedule WHERE id = ?";
+            jdbcTemplate.update(sql, id);
+
+            return id;
+        } else {
+            throw new IllegalArgumentException("Schedule not found");
+        }
     }
 }
