@@ -17,33 +17,29 @@ import java.util.List;
 @RequestMapping("/api")
 public class ScheduleController {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final ScheduleService scheduleService;
 
-    public ScheduleController(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public ScheduleController(ScheduleService scheduleService) {
+        this.scheduleService = scheduleService;
     }
 
     @PostMapping("/schedules")
     public ScheduleResponseDto createSchedule(@RequestBody ScheduleRequestDto scheduleRequestDto) {
-        ScheduleService scheduleService = new ScheduleService(jdbcTemplate);
         return scheduleService.createSchedule(scheduleRequestDto);
     }
 
     @GetMapping("/schedules")
     public List<ScheduleResponseDto> getAllSchedules() {
-        ScheduleService scheduleService = new ScheduleService(jdbcTemplate);
         return scheduleService.getAllSchedules();
     }
 
     @PutMapping("/schedules/{id}")
     public Long updateSchedule(@PathVariable("id") Long id, @RequestBody ScheduleRequestDto scheduleRequestDto) {
-        ScheduleService scheduleService = new ScheduleService(jdbcTemplate);
         return scheduleService.updateSchedule(id, scheduleRequestDto);
     }
 
     @DeleteMapping("/schedules/{id}")
     public Long deleteSchedule(@PathVariable("id") Long id) {
-        ScheduleService scheduleService = new ScheduleService(jdbcTemplate);
         return scheduleService.deleteSchedule(id);
     }
 }
